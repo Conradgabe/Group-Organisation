@@ -28,9 +28,6 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return new_user
 
-@auth_router.get("/users/{user_id}", tags=['User'], response_model=UserCreate)
-async def read_user(user_id: str, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.user_id == user_id).first()
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return db_user
+@auth_router.post("/auth/login")
+async def login(user: UserCreate, db: Session = Depends(get_db)):
+    pass
