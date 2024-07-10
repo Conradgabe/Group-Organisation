@@ -11,8 +11,12 @@ app = FastAPI()
 
 models.Base.metadata.create_all(bind=engine)
 
+@app.get("/test"):
+async def():
+    return {"Message", "Success"}
+
 @app.post("/auth/register", response_model=RegistrationResponse, status_code=status.HTTP_201_CREATED)
-def register(user: schema.UserCreate, db: Session = Depends(get_db)):
+async def register(user: schema.UserCreate, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, user.email)
     if db_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
@@ -25,7 +29,7 @@ def register(user: schema.UserCreate, db: Session = Depends(get_db)):
     )
 
 @app.post("/auth/login", response_model=LoginResponse, status_code=status.HTTP_200_OK)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = crud.get_user_by_email(db, form_data.username)
     if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(
@@ -41,7 +45,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     )
 
 @app.get("/api/users/{id}", response_model=schema.UserResponse, status_code=status.HTTP_200_OK)
-def get_user(id: str, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def get_user(id: str, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     user = crud.get_user(db, id)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
@@ -50,7 +54,7 @@ def get_user(id: str, current_user: models.User = Depends(get_current_user), db:
     return user
 
 @app.get("/api/organisations", response_model=OrganisationListResponse, status_code=status.HTTP_200_OK)
-def get_organisations(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def get_organisations(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     organisations = crud.get_user_organisations(db, current_user.user_id)
     return OrganisationListResponse(
         status="success",
@@ -59,7 +63,7 @@ def get_organisations(current_user: models.User = Depends(get_current_user), db:
     )
 
 @app.get("/api/organisations/{org_id}", response_model=schema.OrganisationDetailResponse, status_code=status.HTTP_200_OK)
-def get_organisation(org_id: str, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def get_organisation(org_id: str, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     organisation = crud.get_organisation_by_id(db, org_id)
     if not organisation:
         raise HTTPException(status_code=404, detail="Organisation not found")
@@ -72,7 +76,7 @@ def get_organisation(org_id: str, current_user: models.User = Depends(get_curren
     )
 
 @app.post("/api/organisations", response_model=schema.OrganisationDetailResponse, status_code=status.HTTP_201_CREATED)
-def create_organisation(org: schema.OrganisationCreate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def create_organisation(org: schema.OrganisationCreate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
         new_org = crud.create_organisation(db, current_user, org.name, org.description)
         return schema.OrganisationDetailResponse(
@@ -88,7 +92,7 @@ def create_organisation(org: schema.OrganisationCreate, current_user: models.Use
         )
     
 @app.post("/api/organisations/{org_id}/users", response_model=schema.OrganisationDetailResponse)
-def add_user_to_organisation(org_id: str, user_data: schema.AddUserToOrganisation, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def add_user_to_organisation(org_id: str, user_data: schema.AddUserToOrganisation, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     success = crud.add_user_to_organisation(db, org_id, user_data.userId)
     if not success:
         raise HTTPException(status_code=400, detail="User or Organisation not found")
