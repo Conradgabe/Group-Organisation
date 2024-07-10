@@ -12,7 +12,7 @@ app = FastAPI()
 models.Base.metadata.create_all(bind=engine)
 
 @app.get("/test")
-async def():
+async def check():
     return {"Message", "Success"}
 
 @app.post("/auth/register", response_model=RegistrationResponse, status_code=status.HTTP_201_CREATED)
