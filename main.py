@@ -11,7 +11,7 @@ app = FastAPI()
 
 models.Base.metadata.create_all(bind=engine)
 
-@app.get("/test"):
+@app.get("/test")
 async def():
     return {"Message", "Success"}
 
